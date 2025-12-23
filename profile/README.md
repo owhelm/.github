@@ -31,3 +31,17 @@ owhelm could try to implement these features as a plugin/layer/wrapper of Helm, 
     - e.g. to be able to set `tolerations` and `affinity`, the sub-chart needs to expose them as acceptable values and the consumer needs to make sure to set these values as many times as there are different Pods. A post-renderer could set them based on a single value instead without requiring a sub-chart to expose the primitives.
 - for keeping the logic encapsulated and the same as it moves across environments
     - e.g. continuing with the `tolerations` / `affinity` example, if post-renderer is baked into the same tarball of the chart, then the logic can change with the application version, allowing the same logic to be re-used in all environments without deploying additional software.
+
+### Existing alternatives
+
+- admission hooks allow mutation of resources
+    - con: requires a cluster-wide deployment of something like Kyverno or an implementation of an HTTP server
+    - con: does not leverage (and plays against) the diffing functionality of tools like Argo CD
+- `--post-renderer`
+    - con: Helm only passes through the final rendered resources as a stream/buffer (i.e. a string), but not the original values or context (e.g. command or release information)
+    - con: the tool itself needs to be pre-installed wherever `helm` is running
+- `Helmfile`
+    - con: no distribution mechanism; external to the chart itself
+- Using a tool to generate the `values.yaml`
+    - con: no common standard, in-house domain specific software
+    - con: external to the chart, and therefore has a different release cycle, which is potentially incompatible with supporting multiple release lines of the same chart

@@ -45,3 +45,21 @@ owhelm could try to implement these features as a plugin/layer/wrapper of Helm, 
 - Using a tool to generate the `values.yaml`
     - con: no common standard, in-house domain specific software
     - con: external to the chart, and therefore has a different release cycle, which is potentially incompatible with supporting multiple release lines of the same chart
+- Using a custom operator and abstracting the API via a CRD
+    - con: significantly higher complexity over declarative approaches, requires thinking about asynchronous events and race conditions, requires serious software engineering chops
+
+
+### Implementation ideas
+
+- A Helm plugin
+    - con: the necessary extension points to not yet exist in Helm
+- A CLI which calls Helm as a CLI or as library
+    - con: installation/setup complexity?
+    - con: would likely need to download/unzip the charts twice (once for owhelm, once for helm)
+    - flow:
+        1. inspect the tarball/chart for owhelm specific configuration (`owhelm/`? `owhelm.yaml`?)
+        2. calculate the final values
+        3. automatically inject a custom `owhelm` specific resource into the final output, it should include all the values so that we can read them during post-rendering and all the supported `owhelm` instructions
+        4. call `helm` with the final values (either by passing them in as a temp file or as a explicit values in CLI)
+        5. use `owhelm` as a `--post-renderer`
+        6. as part of post-rendering, process the chart output and first remove the `owhelm` specific custom resources, while performing the processing of instructions for other resources  (incl. `kustomize` where appropriate)
